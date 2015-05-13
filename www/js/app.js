@@ -16,8 +16,39 @@ angular.module('starter', ['ionic'])
   });
 })
 
+.config(function($stateProvider, $urlRouterProvider) {
+    $stateProvider
+        .state('tabs', {
+            url: "/tab",
+            abstract: true,
+            templateUrl: "templates/tabs.html"
+        })
+        .state('tabs.home', {
+          url: "/home",
+          views: {
+            'home-tab': {
+              templateUrl: "templates/home.html",
+              controller: "MapController"
+            }
+          }
+        })
+        .state("home", {
+            url: "/",
+            templateUrl: "templates/home.html",
+            controller: "MapController",
+            cache: false
+        })
+        .state("firebase", {
+            url: "/firebase",
+            templateUrl: "templates/firebase.html",
+            controller: "FirebaseController"
+        });
+    
+    $urlRouterProvider.otherwise('/tab/home');
+})
+    
 .controller('MapController', function($scope, $ionicLoading) {
-  google.maps.event.addDomListener(window, 'load', function() {
+  function initialize() {
     var SFMarket = [37.785326, -122.405696]
     var myLatlng = new google.maps.LatLng(SFMarket[0], SFMarket[1]);
 
@@ -31,8 +62,7 @@ angular.module('starter', ['ionic'])
 
     // Get users current location
     navigator.geolocation.getCurrentPosition(function (pos) {
-      //var currentLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-      var currentLocation = new google.maps.LatLng(37.6297711, -122.42076659999998);
+      var currentLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
       map.setCenter(currentLocation);
 
       // Create a draggable circle centered on the map
@@ -89,6 +119,7 @@ angular.module('starter', ['ionic'])
 //     log(selectedFishKey + " is at location [" + location + "]");
 //   }
 // });
+
 /*************/
 /*  GEOQUERY */
 /*************/
@@ -168,14 +199,6 @@ geoQuery.on("key_exited", function(vehicleId, vehicleLocation) {
     });
 
     $scope.map = map;
-  });
+  };
+  ionic.Platform.ready(initialize);
 });
-
-
-// /* Logs to the page instead of the console */
-//   function log(message) {
-//     var childDiv = document.createElement("div");
-//     var textNode = document.createTextNode(message);
-//     childDiv.appendChild(textNode);
-//     document.getElementById("log").appendChild(childDiv);
-//   }
