@@ -1,5 +1,5 @@
 var fb = new Firebase("https://bump-app.firebaseio.com/");
-var geoFire = new GeoFire(fb)
+var geoFire = new GeoFire(fb.child('users'));
 
 angular.module('starter', ['ionic'])
 
@@ -85,6 +85,153 @@ angular.module('starter', ['ionic'])
         title: 'My Location'
       });
 
+      /*************/
+      /*  GEOQUERY */
+      /*************/
+      // Keep track of all of the users currently within the query
+      var usersInQuery = {};
+
+      // Create a new GeoQuery instance
+      var geoQuery = geoFire.query({
+        center: [currentLocation.A, currentLocation.F],
+        radius: radiusInKm
+      });
+
+      //Update the query's criteria every time the circle is dragged
+      var updateCriteria = _.debounce(function() {
+        var latLng = circle.getCenter();
+        geoQuery.updateCriteria({
+          center: [latLng.lat(), latLng.lng()],
+          radius: radiusInKm
+        });
+      }, 10);
+      google.maps.event.addListener(circle, "drag", updateCriteria);
+
+      /* Adds new user markers to the map when they enter the query */
+      geoQuery.on("key_entered", function(username, userLocation) {
+        console.log('Entered:',username, userLocation)
+        // Specify that the user has entered this query
+        usersInQuery[username] = true;
+
+        // Look up the user's data in the data set
+        fb.child("users").child(username).once("value", function(dataSnapshot) {
+          // Get the user data from Firebase
+          user = dataSnapshot.val();
+
+          // If the user has not already exited this query in the time it took to look up its data in the firebase, add it to the map
+          if (user !== null && usersInQuery[username] === true) {
+            // Add the user to the list of users in the query
+            usersInQuery[username] = user;
+
+            // Create a new marker for the user
+            user.marker = new google.maps.Marker({
+                position: new google.maps.LatLng(userLocation[0], userLocation[1]),
+                map: map,
+                optimized: true,
+                title: 'Hello World!'
+            });
+          }
+        });
+      });
+
+      /* Moves users markers on the map when their location within the query changes */
+      geoQuery.on("key_moved", function(username, userLocation) {
+        // Get the user from the list of users in the query
+        console.log('Moved:',username, userLocation)
+        var user = usersInQuery[username];
+
+        // Animate the user's marker
+        if (typeof user !== "undefined" && typeof user.marker !== "undefined") {
+          //user.marker.animatedMoveTo(userLocation);
+          user.marker.setPosition(new google.maps.LatLng(userLocation[0], userLocation[1]));
+        }
+      });
+
+      /* Removes user markers from the map when they exit the query */
+      geoQuery.on("key_exited", function(username, userLocation) {
+        console.log('Exit:',username, userLocation)
+        // Get the user from the list of users in the query
+        var user = usersInQuery[username];
+
+        // If the user's data has already been loaded from the Open Data Set, remove its marker from the map
+        if (user !== true) {
+          user.marker.setMap(null);
+        }
+
+        // // Remove the user from the list of users in the query
+        delete usersInQuery[username];
+      });
+    });
+
+    $scope.map = map;
+  };
+
+// test user locations
+var locations = [
+    [37.64, -122.42076659999998],
+    [37.625, -122.42076659999998],
+    [37.635, -122.42076659999998],
+    [37.62, -122.42076659999998],
+  ];
+
+var promises = locations.map(function(location, index) {
+  return geoFire.set("user" + index, location).then(function() {
+    console.log("user" + index + " initially set to [" + location + "]");
+  });
+});
+
+// fxn to move a random user a random direction
+var moveRandom = function() {console.log('hee')
+  var len = locations.length;
+  var randomUser = Math.floor(Math.random() * len);
+  var location = locations[randomUser];
+  var randomLatLon = Math.round(Math.random() * 1);
+  var randomDirection = Math.round(Math.random() * 1);
+  if (randomDirection === 0) {
+    location[randomLatLon] -= .0005;
+  } else {
+    location[randomLatLon] += .0005;
+  }
+  
+  return geoFire.set("user" + randomUser, location).then(function() {
+      console.log("user" + index + "  set to [" + location + "]");
+  });
+}  
+
+setInterval(moveRandom, 200);
+
+  ionic.Platform.ready(initialize);
+});
+
+/* Returns true if the two inputted coordinates are approximately equivalent */
+function coordinatesAreEquivalent(coord1, coord2) {
+  return (Math.abs(coord1 - coord2) < 0.000001);
+}
+
+google.maps.Marker.prototype.animatedMoveTo = function(newLocation) {
+  var toLat = newLocation[0];
+  var toLng = newLocation[1];
+
+  var fromLat = this.getPosition().lat();
+  var fromLng = this.getPosition().lng();
+
+  if (!coordinatesAreEquivalent(fromLat, toLat) || !coordinatesAreEquivalent(fromLng, toLng)) {
+    var percent = 0;
+    var latDistance = toLat - fromLat;
+    var lngDistance = toLng - fromLng;
+    var interval = window.setInterval(function () {
+      percent += 0.01;
+      var curLat = fromLat + (percent * latDistance);
+      var curLng = fromLng + (percent * lngDistance);
+      var pos = new google.maps.LatLng(curLat, curLng);
+      this.setPosition(pos);
+      if (percent >= 1) {
+        window.clearInterval(interval);
+      }
+    }.bind(this), 50);
+  }
+};
+
 /*
 37.6297711
 -122.42076659999998
@@ -103,7 +250,7 @@ angular.module('starter', ['ionic'])
 //     [37.62, -122.42076659999998],
 //   ];
 
-// ADDING DATA TO GEOFIRE
+// // ADDING DATA TO GEOFIRE
 // var promises = locations.map(function(location, index) {
 //   return geoFire.set("fish" + index, location).then(function() {
 //     console.log("user" + index + " initially set to [" + location + "]");
@@ -119,86 +266,3 @@ angular.module('starter', ['ionic'])
 //     log(selectedFishKey + " is at location [" + location + "]");
 //   }
 // });
-
-/*************/
-/*  GEOQUERY */
-/*************/
-// Keep track of all of the vehicles currently within the query
-var usersInQuery = {};
-
-// Create a new GeoQuery instance
-var geoQuery = geoFire.query({
-  center: [currentLocation.A, currentLocation.F],
-  radius: radiusInKm
-});
-
-//Update the query's criteria every time the circle is dragged
-var updateCriteria = _.debounce(function() {
-  var latLng = circle.getCenter();
-  geoQuery.updateCriteria({
-    center: [latLng.lat(), latLng.lng()],
-    radius: radiusInKm
-  });
-}, 10);
-google.maps.event.addListener(circle, "drag", updateCriteria);
-
-/* Adds new vehicle markers to the map when they enter the query */
-geoQuery.on("key_entered", function(vehicleId, vehicleLocation) {
-  console.log('Entered:',vehicleId, vehicleLocation)
-  // Specify that the vehicle has entered this query
-  vehicleId = vehicleId.split(":")[1];
-  vehiclesInQuery[vehicleId] = true;
-
-
-  // Look up the vehicle's data in the Transit Open Data Set
-  // transitFirebaseRef.child("sf-muni/vehicles").child(vehicleId).once("value", function(dataSnapshot) {
-  //   // Get the vehicle data from the Open Data Set
-  //   vehicle = dataSnapshot.val();
-
-  //   // If the vehicle has not already exited this query in the time it took to look up its data in the Open Data
-  //   // Set, add it to the map
-  //   if (vehicle !== null && vehiclesInQuery[vehicleId] === true) {
-  //     // Add the vehicle to the list of vehicles in the query
-  //     vehiclesInQuery[vehicleId] = vehicle;
-
-  //     // Create a new marker for the vehicle
-  //     vehicle.marker = createVehicleMarker(vehicle, getVehicleColor(vehicle));
-  //   }
-  // });
-});
-
-/* Moves vehicles markers on the map when their location within the query changes */
-geoQuery.on("key_moved", function(vehicleId, vehicleLocation) {
-  // Get the vehicle from the list of vehicles in the query
-  console.log('Moved:',vehicleId, vehicleLocation)
-  vehicleId = vehicleId.split(":")[1];
-  var vehicle = vehiclesInQuery[vehicleId];
-
-  // Animate the vehicle's marker
-  // if (typeof vehicle !== "undefined" && typeof vehicle.marker !== "undefined") {
-  //   vehicle.marker.animatedMoveTo(vehicleLocation);
-  // }
-});
-
-/* Removes vehicle markers from the map when they exit the query */
-geoQuery.on("key_exited", function(vehicleId, vehicleLocation) {
-  console.log('Exit:',vehicleId, vehicleLocation)
-  // Get the vehicle from the list of vehicles in the query
-  vehicleId = vehicleId.split(":")[1];
-  var vehicle = vehiclesInQuery[vehicleId];
-
-  // // If the vehicle's data has already been loaded from the Open Data Set, remove its marker from the map
-  // if (vehicle !== true) {
-  //   vehicle.marker.setMap(null);
-  // }
-
-  // // Remove the vehicle from the list of vehicles in the query
-  // delete vehiclesInQuery[vehicleId];
-});
-
-    });
-
-    $scope.map = map;
-  };
-  ionic.Platform.ready(initialize);
-});
