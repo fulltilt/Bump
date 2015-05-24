@@ -1,7 +1,7 @@
 var fb = new Firebase("https://bump-app.firebaseio.com/");
 var geoFire = new GeoFire(fb.child('users'));
 
-angular.module('starter', ['ionic'])
+angular.module('starter', ['ionic', 'firebase'])
 
 .run(function($ionicPlatform) {
   $ionicPlatform.ready(function() {
@@ -44,7 +44,7 @@ angular.module('starter', ['ionic'])
             controller: "FirebaseController"
         });
     
-    $urlRouterProvider.otherwise('/tab/home');
+    $urlRouterProvider.otherwise('/firebase');
 })
     
 .controller('MapController', function($scope, $ionicLoading) {
@@ -62,10 +62,11 @@ angular.module('starter', ['ionic'])
 
     // Get users current location
     navigator.geolocation.getCurrentPosition(function (pos) {
-      var currentLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+      var currentLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude),
+          cX = currentLocation.A,
+          cY = currentLocation.F;
       map.setCenter(currentLocation);
-var cX = currentLocation.A,
-cY = currentLocation.F;
+
       // Create a draggable circle centered on the map
       var radiusInKm = 0.5;
       var circle = new google.maps.Circle({
@@ -204,42 +205,42 @@ setInterval(moveRandom, 200);
     $scope.map = map;
   };
 
-/*
-// test user locations
-var locations = [
-    [37.64, -122.42076659999998],
-    [37.625, -122.42076659999998],
-    [37.635, -122.42076659999998],
-    [37.62, -122.42076659999998]
-  ];
-
-var promises = locations.map(function(location, index) {
-  return geoFire.set("user" + index, location).then(function() {
-    console.log("user" + index + " initially set to [" + location + "]");
-  });
-});
-
-// fxn to move a random user a random direction
-var moveRandom = function() {
-  var len = locations.length;
-  var randomUser = Math.floor(Math.random() * len);
-  var location = locations[randomUser];
-  var randomLatLon = Math.round(Math.random() * 1);
-  var randomDirection = Math.round(Math.random() * 1);
-  if (randomDirection === 0) {
-    location[randomLatLon] -= .0005;
-  } else {
-    location[randomLatLon] += .0005;
-  }
-  
-  return geoFire.set("user" + randomUser, location).then(function() {
-      console.log("user" + index + "  set to [" + location + "]");
-  });
-}  
-
-setInterval(moveRandom, 200);
-*/
   ionic.Platform.ready(initialize);
+})
+
+.controller("FirebaseController", function($scope, $state, $ionicHistory, $firebaseAuth) {
+
+    $ionicHistory.nextViewOptions({
+        disableAnimate: true,
+        disableBack: true
+    });
+
+    var fbAuth = $firebaseAuth(fb);
+
+    $scope.login = function(username, password) {
+        fbAuth.$authWithPassword({
+            email: username,
+            password: password
+        }).then(function(authData) {
+            $state.go("home");
+        }).catch(function(error) {
+            console.error("ERROR: " + error);
+        });
+    }
+
+    $scope.register = function(username, password) {
+        fbAuth.$createUser({email: username, password: password}).then(function(userData) {
+            return fbAuth.$authWithPassword({
+                email: username,
+                password: password
+            });
+        }).then(function(authData) {
+            $state.go("register");
+        }).catch(function(error) {
+            console.error("ERROR: " + error);
+        });
+    }
+
 });
 
 /* Returns true if the two inputted coordinates are approximately equivalent */
