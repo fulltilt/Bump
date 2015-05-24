@@ -64,7 +64,8 @@ angular.module('starter', ['ionic'])
     navigator.geolocation.getCurrentPosition(function (pos) {
       var currentLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
       map.setCenter(currentLocation);
-
+var cX = currentLocation.A,
+cY = currentLocation.F;
       // Create a draggable circle centered on the map
       var radiusInKm = 0.5;
       var circle = new google.maps.Circle({
@@ -131,7 +132,7 @@ angular.module('starter', ['ionic'])
                 title: 'Hello World!'
             });
           }
-        });
+        });    
       });
 
       /* Moves users markers on the map when their location within the query changes */
@@ -161,17 +162,55 @@ angular.module('starter', ['ionic'])
         // // Remove the user from the list of users in the query
         delete usersInQuery[username];
       });
+
+/*** START DEMO CODE ***/      
+// test user locations
+var locations = [
+    [cX + 0.003,cY],
+    [cX,cY + 0.003],
+    [cX - 0.003,cY],
+    [cX,cY - 0.003]
+  ];
+
+var promises = locations.map(function(location, index) {
+  return geoFire.set("user" + index, location).then(function() {
+    console.log("user" + index + " initially set to [" + location + "]");
+  });
+}); 
+
+// fxn to move a random user a random direction
+var moveRandom = function() {
+  var len = locations.length;
+  var randomUser = Math.floor(Math.random() * len);
+  var location = locations[randomUser];
+  var randomLatLon = Math.round(Math.random() * 1);
+  var randomDirection = Math.round(Math.random() * 1);
+  if (randomDirection === 0) {
+    location[randomLatLon] -= .0005;
+  } else {
+    location[randomLatLon] += .0005;
+  }
+  
+  return geoFire.set("user" + randomUser, location).then(function() {
+      console.log("user" + index + "  set to [" + location + "]");
+  });
+}  
+
+setInterval(moveRandom, 200);     
+/*** /END DEMO CODE ***/    
+
     });
 
     $scope.map = map;
   };
 
+/*
 // test user locations
 var locations = [
     [37.64, -122.42076659999998],
     [37.625, -122.42076659999998],
     [37.635, -122.42076659999998],
-    [37.62, -122.42076659999998],
+    [37.62, -122.42076659999998]
   ];
 
 var promises = locations.map(function(location, index) {
@@ -181,7 +220,7 @@ var promises = locations.map(function(location, index) {
 });
 
 // fxn to move a random user a random direction
-var moveRandom = function() {console.log('hee')
+var moveRandom = function() {
   var len = locations.length;
   var randomUser = Math.floor(Math.random() * len);
   var location = locations[randomUser];
@@ -199,7 +238,7 @@ var moveRandom = function() {console.log('hee')
 }  
 
 setInterval(moveRandom, 200);
-
+*/
   ionic.Platform.ready(initialize);
 });
 
