@@ -222,7 +222,7 @@ setInterval(moveRandom, 200);
             email: username,
             password: password
         }).then(function(authData) {
-            $state.go("home");
+            $state.go("tabs.home");
         }).catch(function(error) {
             console.error("ERROR: " + error);
         });

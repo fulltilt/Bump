@@ -1,4 +1,5 @@
-<ion-view title="Firebase Login">
+<ion-view title="Bump Login">
+    <ion-nav-bar class="bar-positive"></ion-nav-bar>
     <ion-content>
         <div>
             <div class="list list-inset">
@@ -11,10 +12,14 @@
             </div>
             <div class="padding-left padding-right">
                 <div class="button-bar">
-                    <a class="button" ng-click="login(username, password)">Login</a>
-                    <a class="button" ng-click="register(username, password)">Register</a>
+                    <a class="button button-block button-positive" ng-click="login(username, password)">Login</a>
+                    <span>&nbsp;</span>
+                    <a class="button button-block button-positive" ng-click="register(username, password)">Register</a>
                 </div>
             </div>
+            <p class="text-center">
+              <a href="#/forgot-password">Forgot password</a>
+            </p>
         </div>
     </ion-content>
 </ion-view>
