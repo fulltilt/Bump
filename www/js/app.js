@@ -81,10 +81,31 @@ angular.module('starter', ['ionic', 'firebase'])
         draggable: true
       });
 
+      // inner radius where one can Bump
+      var bumpRadiusInKm = 0.05;
+      var bumpCircle = new google.maps.Circle({
+        strokeColor: "#6D3099",
+        strokeOpacity: 0.7,
+        strokeWeight: 1,
+        fillColor: "#00FF00",
+        fillOpacity: 0.35,
+        map: map,
+        center: currentLocation,
+        radius: ((bumpRadiusInKm) * 1000),
+        draggable: false
+      });
+
       var myLocation = new google.maps.Marker({
         position: currentLocation,
         map: map,
         title: 'My Location'
+      });
+
+      // center the map whenever the current user's position changes
+      google.maps.event.addListener(myLocation, 'position_changed', function () {
+        map.panTo(myLocation.getPosition());
+        //map.setCenter(myLocation.getPosition()); // sets center without animation
+        bumpCircle.setCenter(myLocation.getPosition());
       });
 
       /*************/
@@ -97,6 +118,23 @@ angular.module('starter', ['ionic', 'firebase'])
       var geoQuery = geoFire.query({
         center: [currentLocation.A, currentLocation.F],
         radius: radiusInKm
+      });
+
+      // Bump functionality
+      var bumpQuery = geoFire.query({
+        center: [currentLocation.A, currentLocation.F],
+        radius: bumpRadiusInKm
+      });
+      var updateBumpCriteria = _.debounce(function() {
+        var latLng = bumpCircle.getCenter();
+        geoQuery.updateCriteria({
+          center: [latLng.lat(), latLng.lng()],
+          radius: bumpRadiusInKm
+        });
+      }, 10);
+      google.maps.event.addListener(bumpCircle, "drag", updateBumpCriteria);
+      bumpQuery.on("key_entered", function(username, userLocation) {
+        console.log("BUMP with ", username);
       });
 
       //Update the query's criteria every time the circle is dragged
@@ -197,7 +235,7 @@ var moveRandom = function() {
   });
 }  
 
-setInterval(moveRandom, 200);     
+setInterval(moveRandom, 300);     
 /*** /END DEMO CODE ***/    
 
     });
@@ -208,6 +246,7 @@ setInterval(moveRandom, 200);
   ionic.Platform.ready(initialize);
 })
 
+// Login screen
 .controller("FirebaseController", function($scope, $state, $ionicHistory, $firebaseAuth) {
 
     $ionicHistory.nextViewOptions({
@@ -306,3 +345,6 @@ google.maps.Marker.prototype.animatedMoveTo = function(newLocation) {
 //     log(selectedFishKey + " is at location [" + location + "]");
 //   }
 // });
+
+//move the marker      
+//myLocation.setPosition(new google.maps.LatLng(currentLocation.A, currentLocation.F+0.003));
