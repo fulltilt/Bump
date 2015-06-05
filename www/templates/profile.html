@@ -1,0 +1,15 @@
+<ion-view view-title="Profile">
+	<ion-nav-bar class="bar-positive">
+	    <ion-nav-back-button class="button-clear">
+	    	Back
+  		</ion-nav-back-button>
+	</ion-nav-bar>
+	<ion-content class="has-header">
+        <div class="row">
+            <div class="col"><img ng-src="{{currentUser.profile.gravatar}}" class="img-circle gravatar">&nbsp;<h2 class="profile-name">{{currentUser.profile.name}}</h2></div>
+        </div>
+        <div class="row">
+            <div class="col"><h4>{{email}}</h4></div>
+        </div>
+    </ion-content>
+</ion-view>

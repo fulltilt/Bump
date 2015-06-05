@@ -1,7 +1,8 @@
 var fb = new Firebase("https://bump-app.firebaseio.com/");
 var geoFire = new GeoFire(fb.child('users'));
 
-angular.module('starter', ['ionic', 'firebase'])
+var app = angular.module('bump', ['ionic', 'firebase'])
+  .constant('FURL', 'https://bump-app.firebaseio.com/')  
 
 .run(function($ionicPlatform) {
   $ionicPlatform.ready(function() {
@@ -18,36 +19,50 @@ angular.module('starter', ['ionic', 'firebase'])
 
 .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider
-        .state('tabs', {
-            url: "/tab",
-            abstract: true,
-            templateUrl: "templates/tabs.html"
+        .state("register", {
+            url: "/register",
+            templateUrl: "templates/register.html",
+            controller: "AuthController"
         })
-        .state('tabs.home', {
-          url: "/home",
-          views: {
-            'home-tab': {
-              templateUrl: "templates/home.html",
-              controller: "MapController"
-            }
-          }
+        .state("forgot-password", {
+            url: "/forgot-password",
+            templateUrl: "templates/forgot-password.html",
+            controller: "AuthController"
         })
-        .state("home", {
-            url: "/",
+        .state("login", {
+            url: "/login",
+            templateUrl: "templates/login.html",
+            controller: "AuthController"
+        })    
+        .state('home', {
+            url: "/home",
             templateUrl: "templates/home.html",
             controller: "MapController",
-            cache: false
+            resolve: {
+              currentAuth: function(Auth) {
+                return Auth.requireAuth();
+              }
+            }       
         })
-        .state("firebase", {
-            url: "/firebase",
-            templateUrl: "templates/firebase.html",
-            controller: "FirebaseController"
+        .state("profile", {
+            url: "/profile",
+            templateUrl: "templates/profile.html",
+            controller: "MapController",
+            resolve: {
+              currentAuth: function(Auth) {
+                return Auth.requireAuth();
+              }
+            }
+        })        
+        .state("otherwise", {
+            url: "*path",
+            templateUrl: "templates/home.html",
+            controller: "MapController"
         });
-    
-    $urlRouterProvider.otherwise('/firebase');
 })
     
-.controller('MapController', function($scope, $ionicLoading) {
+.controller('MapController', function($scope, $ionicPopup, $ionicLoading, $firebase) {
+
   function initialize() {
     var SFMarket = [37.785326, -122.405696]
     var myLatlng = new google.maps.LatLng(SFMarket[0], SFMarket[1]);
@@ -67,6 +82,28 @@ angular.module('starter', ['ionic', 'firebase'])
           cY = currentLocation.F;
       map.setCenter(currentLocation);
 
+    // Bump confirm dialog
+     var showConfirm = function(username) {
+       var confirmPopup = $ionicPopup.confirm({
+         title: 'Bump?',
+         template: 'Give ' + username + ' a Bump?'
+       });
+       confirmPopup.then(function(res) {
+         if(res) {
+          var obj = {
+            datetime: Firebase.ServerValue.TIMESTAMP,
+            username: username
+          };
+          var bumpsRef = fb.child('user_bumps');
+          bumpsRef.push(obj);
+          //$firebase(fb.child('user_bumps').child(username))//.$push(obj);
+          //$firebase(ref.child('user_bumps').child(username)).$push(obj);
+         } else {
+           console.log('Nope.');
+         }
+       });
+     };    
+
       // Create a draggable circle centered on the map
       var radiusInKm = 0.5;
       var circle = new google.maps.Circle({
@@ -80,9 +117,9 @@ angular.module('starter', ['ionic', 'firebase'])
         radius: ((radiusInKm) * 1000),
         draggable: true
       });
-
+      
       // inner radius where one can Bump
-      var bumpRadiusInKm = 0.05;
+      var bumpRadiusInKm = 0.07;
       var bumpCircle = new google.maps.Circle({
         strokeColor: "#6D3099",
         strokeOpacity: 0.7,
@@ -134,7 +171,7 @@ angular.module('starter', ['ionic', 'firebase'])
       }, 10);
       google.maps.event.addListener(bumpCircle, "drag", updateBumpCriteria);
       bumpQuery.on("key_entered", function(username, userLocation) {
-        console.log("BUMP with ", username);
+        showConfirm(username);
       });
 
       //Update the query's criteria every time the circle is dragged
@@ -205,10 +242,10 @@ angular.module('starter', ['ionic', 'firebase'])
 /*** START DEMO CODE ***/      
 // test user locations
 var locations = [
-    [cX + 0.003,cY],
-    [cX,cY + 0.003],
-    [cX - 0.003,cY],
-    [cX,cY - 0.003]
+    [cX + 0.001,cY],
+    [cX,cY + 0.001],
+    [cX - 0.001,cY],
+    [cX,cY - 0.001]
   ];
 
 var promises = locations.map(function(location, index) {
@@ -244,48 +281,7 @@ setInterval(moveRandom, 300);
   };
 
   ionic.Platform.ready(initialize);
-})
-
-// Login screen
-.controller("FirebaseController", function($scope, $state, $ionicHistory, $firebaseAuth) {
-
-    $ionicHistory.nextViewOptions({
-        disableAnimate: true,
-        disableBack: true
-    });
-
-    var fbAuth = $firebaseAuth(fb);
-
-    $scope.login = function(username, password) {
-        fbAuth.$authWithPassword({
-            email: username,
-            password: password
-        }).then(function(authData) {
-            $state.go("tabs.home");
-        }).catch(function(error) {
-            console.error("ERROR: " + error);
-        });
-    }
-
-    $scope.register = function(username, password) {
-        fbAuth.$createUser({email: username, password: password}).then(function(userData) {
-            return fbAuth.$authWithPassword({
-                email: username,
-                password: password
-            });
-        }).then(function(authData) {
-            $state.go("register");
-        }).catch(function(error) {
-            console.error("ERROR: " + error);
-        });
-    }
-
 });
-
-/* Returns true if the two inputted coordinates are approximately equivalent */
-function coordinatesAreEquivalent(coord1, coord2) {
-  return (Math.abs(coord1 - coord2) < 0.000001);
-}
 
 google.maps.Marker.prototype.animatedMoveTo = function(newLocation) {
   var toLat = newLocation[0];
