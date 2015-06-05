@@ -3,13 +3,13 @@
 app.controller("AuthController", function($scope, FURL, Auth, $state, $ionicHistory, $firebaseAuth) {
     // if user is logged in and tries to go into the login screen, redirect him to home
     if (Auth.signedIn()) {
-        $state.go('main');
+        $state.go('home');
     }
 
     $scope.login = function(user) {
         Auth.login(user)
             .then(function() {
-                $state.go('main');
+                $state.go('home');
             }, function(err) {
                 console.log(err);
             });
@@ -18,7 +18,7 @@ app.controller("AuthController", function($scope, FURL, Auth, $state, $ionicHist
     $scope.register = function(user) {
         Auth.register(user)
             .then(function() {
-                $state.go('main');
+                $state.go('home');
             }, function(err) {
                 console.log(err);
             });

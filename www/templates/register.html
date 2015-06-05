@@ -1,0 +1,23 @@
+<ion-view view-title="Register">
+	<ion-nav-bar class="bar-positive">
+	    <ion-nav-back-button class="button-clear">
+	    	Back
+  		</ion-nav-back-button>
+	</ion-nav-bar>
+	<ion-content class="has-header">
+        <div class="list list-inset">
+            <label class="item item-input">
+                <input ng-model="user.name" type="text" placeholder="Name" />
+            </label>
+            <label class="item item-input">
+                <input ng-model="user.email" type="email" placeholder="Email Address" />
+            </label>
+            <label class="item item-input">
+                <input ng-model="user.password" type="password" placeholder="Password" />
+            </label>
+        </div>
+        <div class="padding-left">
+    		<a class="button button-large button-positive padding-left" ng-click="register(user)">Create a New Account</a>
+    	</div>
+    </ion-content>
+</ion-view>

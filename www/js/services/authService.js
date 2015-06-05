@@ -11,7 +11,8 @@ app.factory('Auth', function(FURL, $firebaseAuth, $firebaseObject, $q) {
 			var profile = {
 				name: user.name,
 				email: emailToKey(user.email),
-				gravatar: get_gravatar(user.email, 40)
+				gravatar: get_gravatar(user.email, 40),
+        bumps: 0
 			};
 
       var profileRef = fb.child('profile').child(uid);  // or fb.child('profile/' + uid)

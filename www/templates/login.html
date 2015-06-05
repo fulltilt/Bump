@@ -1,24 +1,25 @@
-<ion-view title="Bump Login">
+<ion-view title="Sign In/Register">
     <ion-nav-bar class="bar-positive"></ion-nav-bar>
-    <ion-content>
+    <ion-content class="has-header">
         <div>
             <div class="list list-inset">
+                <h4>Sign in with your email</h4>
                 <label class="item item-input">
-                    <input ng-model="username" type="text" placeholder="Username" />
+                    <input ng-model="user.email" type="text" placeholder="Email Address" />
                 </label>
                 <label class="item item-input">
-                    <input ng-model="password" type="password" placeholder="Password" />
+                    <input ng-model="user.password" type="password" placeholder="Password" />
                 </label>
             </div>
-            <div class="padding-left padding-right">
-                <div class="button-bar">
-                    <a class="button button-block button-positive" ng-click="login(username, password)">Login</a>
-                    <!-- <a class="button button-block button-positive" ng-click="register(username, password)">Register</a> -->
-                </div>
+            <div class="padding-left padding-right padding-bottom">
+                <a class="button button-large button-positive" ng-click="login(user)">Sign In</a>
+                <a class="pass-text-height" href="#/forgot-password">Forgot your password?</a>
             </div>
-            <p class="text-center">
-              <a href="#/forgot-password">Forgot password</a>
-            </p>
+
+            <div class="padding-top padding-left padding-right">
+                <h4>New User?</h4>
+                <a class="button button-large button-positive" href="#/register">Create a New Account</a>
+            </div>
         </div>
     </ion-content>
 </ion-view>
