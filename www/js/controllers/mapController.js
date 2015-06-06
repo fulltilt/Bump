@@ -4,43 +4,50 @@ app.controller('MapController', function($scope, FURL, $ionicPopup, Auth) {
 	var fb = new Firebase(FURL);
 	var geoFire = new GeoFire(fb.child('users'));
 	$scope.currentUser = Auth.user;
+	console.log($scope.currentUser)
+
+	var SFMarket = [37.785326, -122.405696]
+    var myLatlng = new google.maps.LatLng(SFMarket[0], SFMarket[1]);
+
+    var mapOptions = {
+	    center: myLatlng,
+	    zoom: 16,
+	    mapTypeId: google.maps.MapTypeId.ROADMAP
+    };
+
+	var map = new google.maps.Map(document.getElementById('map'), mapOptions);
+
+	// Setup Bump confirm dialog
+	var showConfirm = function(username) {
+        var confirmPopup = $ionicPopup.confirm({
+         	title: 'Bump?',
+         	template: 'Give ' + username + ' a Bump?'
+        });
+
+   		confirmPopup.then(function(res) {
+         	if (res) {
+          		var obj = {
+            		datetime: Firebase.ServerValue.TIMESTAMP,
+            		username: username
+          		};
+
+
+bumps.transaction(function(bumpCount) {
+return bumpCount + 1;
+});
+
+          		var bumpsRef = fb.child('user_bumps');
+          		bumpsRef.push(obj);
+		        //$firebase(fb.child('user_bumps').child(username))//.$push(obj);
+		        //$firebase(ref.child('user_bumps').child(username)).$push(obj);
+         	} else {
+           		console.log('Nope.');
+         	}
+   		});
+   	};
 
   	function initialize() {
-	    var SFMarket = [37.785326, -122.405696]
-	    var myLatlng = new google.maps.LatLng(SFMarket[0], SFMarket[1]);
-
-	    var mapOptions = {
-		    center: myLatlng,
-		    zoom: 16,
-		    mapTypeId: google.maps.MapTypeId.ROADMAP
-	    };
-
-    	var map = new google.maps.Map(document.getElementById('map'), mapOptions);
-
-		// Setup Bump confirm dialog
- 		var showConfirm = function(username) {
-	        var confirmPopup = $ionicPopup.confirm({
-	         	title: 'Bump?',
-	         	template: 'Give ' + username + ' a Bump?'
-	        });
-
-	   		confirmPopup.then(function(res) {
-	         	if (res) {
-	          		var obj = {
-	            		datetime: Firebase.ServerValue.TIMESTAMP,
-	            		username: username
-	          		};
-	          		var bumpsRef = fb.child('user_bumps');
-	          		bumpsRef.push(obj);
-			        //$firebase(fb.child('user_bumps').child(username))//.$push(obj);
-			        //$firebase(ref.child('user_bumps').child(username)).$push(obj);
-	         	} else {
-	           		console.log('Nope.');
-	         	}
-	   		});
-	   	};
-
-    	// Get users current location
+    	// Get users current location. Once the location has been determined, setup the app
     	navigator.geolocation.getCurrentPosition(function (pos) {
       		var currentLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude),
           		cX = currentLocation.A,
@@ -51,6 +58,13 @@ app.controller('MapController', function($scope, FURL, $ionicPopup, Auth) {
 			google.maps.event.addListener(currentLocation, 'position_changed', function () {
 		        map.panTo(currentLocation.getPosition());
 		        bumpCircle.setCenter(currentLocation.getPosition());
+		    });
+
+			// create marker for User's location
+			var myLocation = new google.maps.Marker({
+		        position: currentLocation,
+		        map: map,
+		        title: 'Current Location'
 		    });
 
 		    // Create a draggable circle centered on the map. This circle will display users within a half a kilometer radius
@@ -215,11 +229,11 @@ function demo(cX, cY, geoFire) {
 };
 
 google.maps.Marker.prototype.animatedMoveTo = function(newLocation) {
-  var toLat = newLocation[0];
-  var toLng = newLocation[1];
+  	var toLat = newLocation[0];
+	var toLng = newLocation[1];
 
-  var fromLat = this.getPosition().lat();
-  var fromLng = this.getPosition().lng();
+	var fromLat = this.getPosition().lat();
+	var fromLng = this.getPosition().lng();
 
   if (!coordinatesAreEquivalent(fromLat, toLat) || !coordinatesAreEquivalent(fromLng, toLng)) {
     var percent = 0;

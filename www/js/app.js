@@ -53,7 +53,7 @@ var app = angular.module('bump', ['ionic', 'firebase'])
         })        
         .state("otherwise", {
             url: "*path",
-            templateUrl: "templates/home.html",
-            controller: "MapController"
+            templateUrl: "templates/login.html",
+            controller: "AuthController"
         });
 });
