@@ -6,9 +6,9 @@ app.controller('MapController', function($scope, FURL, $ionicPopup, $firebaseObj
 	$scope.currentUser = Auth.user;
 	var uid = $scope.currentUser.uid;
 
+	// set initial location is downtown SF
 	var SFMarket = [37.785326, -122.405696]
     var myLatlng = new google.maps.LatLng(SFMarket[0], SFMarket[1]);
-
     var mapOptions = {
 	    center: myLatlng,
 	    zoom: 16,
@@ -48,8 +48,9 @@ app.controller('MapController', function($scope, FURL, $ionicPopup, $firebaseObj
    		});
    	};
 
-   	var geoQuery = 'hello', 
-   	bumpQuery = 'goodbye';
+   	var geoQuery, 
+   		bumpQuery,
+   		intervalId = undefined;
 
   	function initialize() {
     	// Get users current location. Once the location has been determined, setup the app
@@ -189,7 +190,7 @@ app.controller('MapController', function($scope, FURL, $ionicPopup, $firebaseObj
 				delete usersInQuery[username];
 			});
 
-demo(cX, cY, geoFire);
+intervalId = demo(cX, cY, geoFire);
     	});
 
     	$scope.map = map;
@@ -201,8 +202,7 @@ demo(cX, cY, geoFire);
 
   	$scope.logout = function() {
   		Auth.logout();
-console.log('logout: ', geoQuery, bumpQuery)  	
-geoFire = null;	
+		clearInterval(intervalId)
   		geoQuery.cancel();
   		bumpQuery.cancel();
   		$state.go('login');
@@ -242,8 +242,7 @@ function demo(cX, cY, geoFire) {
 	      //console.log("user" + index + "  set to [" + location + "]");
 	  });
 	}  
-
-	return setInterval(moveRandom, 500);  	
+	return setInterval(moveRandom, 500);
 };
 
 google.maps.Marker.prototype.animatedMoveTo = function(newLocation) {
