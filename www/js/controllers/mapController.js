@@ -1,10 +1,10 @@
 'use strict';
 
-app.controller('MapController', function($scope, FURL, $ionicPopup, Auth) {
+app.controller('MapController', function($scope, FURL, $ionicPopup, $firebaseObject, $state, Auth) {
 	var fb = new Firebase(FURL);
 	var geoFire = new GeoFire(fb.child('users'));
 	$scope.currentUser = Auth.user;
-	console.log($scope.currentUser)
+	var uid = $scope.currentUser.uid;
 
 	var SFMarket = [37.785326, -122.405696]
     var myLatlng = new google.maps.LatLng(SFMarket[0], SFMarket[1]);
@@ -30,21 +30,26 @@ app.controller('MapController', function($scope, FURL, $ionicPopup, Auth) {
             		datetime: Firebase.ServerValue.TIMESTAMP,
             		username: username
           		};
+			
+				// update bump count
+				var bumps = fb.child('profile').child(uid).child('bumps');
+				bumps.transaction(function(bumpCount) {
+					return bumpCount + 1;
+				});
 
-
-bumps.transaction(function(bumpCount) {
-return bumpCount + 1;
-});
-
-          		var bumpsRef = fb.child('user_bumps');
-          		bumpsRef.push(obj);
-		        //$firebase(fb.child('user_bumps').child(username))//.$push(obj);
-		        //$firebase(ref.child('user_bumps').child(username)).$push(obj);
+// create entry for each bump. (not sure if will use this)
+// var bumpsRef = fb.child('user_bumps');
+// bumpsRef.push(obj);
+//$firebase(fb.child('user_bumps').child(username))//.$push(obj);
+//$firebase(ref.child('user_bumps').child(username)).$push(obj);
          	} else {
            		console.log('Nope.');
          	}
    		});
    	};
+
+   	var geoQuery = 'hello', 
+   	bumpQuery = 'goodbye';
 
   	function initialize() {
     	// Get users current location. Once the location has been determined, setup the app
@@ -102,13 +107,13 @@ return bumpCount + 1;
 	  		var usersInQuery = {};
 
 	        // Create a new GeoFire query instance for outer radius
-	        var geoQuery = geoFire.query({
+	        geoQuery = geoFire.query({
 	        	center: [currentLocation.A, currentLocation.F],
 	        	radius: radiusInKm
 	        });
 
 		    // Create a new GeoFire query instance for inner Bump radius
-		    var bumpQuery = geoFire.query({
+		    bumpQuery = geoFire.query({
 		        center: [currentLocation.A, currentLocation.F],
 		        radius: bumpRadiusInKm
 		    });
@@ -190,6 +195,19 @@ demo(cX, cY, geoFire);
     	$scope.map = map;
   	};
 
+  	$scope.goProfile = function() {
+  		$state.go('profile');
+  	}
+
+  	$scope.logout = function() {
+  		Auth.logout();
+console.log('logout: ', geoQuery, bumpQuery)  	
+geoFire = null;	
+  		geoQuery.cancel();
+  		bumpQuery.cancel();
+  		$state.go('login');
+  	}
+
   	ionic.Platform.ready(initialize);
 });
 
@@ -221,11 +239,11 @@ function demo(cX, cY, geoFire) {
 	  }
 	  
 	  return geoFire.set("user" + randomUser, location).then(function() {
-	      console.log("user" + index + "  set to [" + location + "]");
+	      //console.log("user" + index + "  set to [" + location + "]");
 	  });
 	}  
 
-	setInterval(moveRandom, 300);  	
+	return setInterval(moveRandom, 500);  	
 };
 
 google.maps.Marker.prototype.animatedMoveTo = function(newLocation) {

@@ -50,10 +50,15 @@ var app = angular.module('bump', ['ionic', 'firebase'])
                 return Auth.requireAuth();
               }
             }
-        })        
+        }) 
         .state("otherwise", {
             url: "*path",
             templateUrl: "templates/login.html",
             controller: "AuthController"
-        });
+        });       
+        // .state("otherwise", {
+        //     url: "*path",
+        //     templateUrl: "templates/home.html",
+        //     controller: "MapController"
+        // });
 });

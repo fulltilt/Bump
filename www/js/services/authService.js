@@ -1,6 +1,6 @@
 'use strict';
 
-app.factory('Auth', function(FURL, $firebaseAuth, $firebaseObject, $q) {
+app.factory('Auth', function(FURL, $firebaseAuth, $firebaseObject) {
 	var fb = new Firebase(FURL);
 	var auth = $firebaseAuth(fb);
 
@@ -58,19 +58,20 @@ app.factory('Auth', function(FURL, $firebaseAuth, $firebaseObject, $q) {
     requireAuth: function() {
       return auth.$requireAuth();
     }
-  };
-  	auth.$onAuth(function(authData) {
-  		if (authData) {
-  			angular.copy(authData, Auth.user);	// when user logs in, copy authData to Auth.user
-  			Auth.user.profile = $firebaseObject(fb.child('profile').child(authData.uid));
-  		} else {
-  			if (Auth.user && Auth.user.profile) {
-  				Auth.user.profile.$destroy();
-  			}
-  			
-  			angular.copy({}, Auth.user);	// when user logs out, release resource
-  		}
-  	});
+  }; // end Auth object
+	
+  auth.$onAuth(function(authData) {
+		if (authData) {
+			angular.copy(authData, Auth.user);	// when user logs in, copy authData to Auth.user
+			Auth.user.profile = $firebaseObject(fb.child('profile').child(authData.uid));
+		} else {
+			if (Auth.user && Auth.user.profile) {
+				Auth.user.profile.$destroy();
+			}
+			
+			angular.copy({}, Auth.user);	// when user logs out, release resource
+		}
+	});
 
   // Base64 encode email address to avoid Firebase invalid character issues
   function emailToKey(emailAddress){
