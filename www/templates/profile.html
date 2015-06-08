@@ -15,7 +15,10 @@
             <div class="col"><img ng-src="{{currentUser.profile.gravatar}}" class="img-circle gravatar">&nbsp;<h2 class="profile-name">{{currentUser.profile.name}}</h2></div>
         </div>
         <div class="row">
-            <div class="col"><h4>{{email}}</h4></div>
+            <h2>Email: </h2><div class="col"><h4>{{email}}</h4></div>
+        </div>
+        <div class="row">
+            <h2>Bumps: </h2><div class="col"><h4>{{currentUser.profile.bumps}}</h4></div>
         </div>
     </ion-content>
 </ion-view>

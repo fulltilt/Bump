@@ -20,7 +20,7 @@ app.service('mapService', function(FURL, $ionicPopup, Auth) {
    		intervalId;		// ID used to clear interval for demo
 
    	var uid = Auth.user.uid;
-   	
+
 	// Setup Bump confirm dialog
 	var showConfirm = function(username) {
         var confirmPopup = $ionicPopup.confirm({

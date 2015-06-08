@@ -44,7 +44,7 @@ var app = angular.module('bump', ['ionic', 'firebase'])
         .state("profile", {
             url: "/profile",
             templateUrl: "templates/profile.html",
-            controller: "MapController",
+            controller: "ProfileController",
             resolve: {
               currentAuth: function(Auth) {
                 return Auth.requireAuth();

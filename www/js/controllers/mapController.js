@@ -1,25 +1,11 @@
 'use strict';
 
-app.controller('MapController', function($scope, FURL, mapService, $state, Auth) {
-
+app.controller('MapController', function($scope, FURL, mapService, $state) {
 	$scope.map = mapService.map;
 
   	$scope.goProfile = function() {
   		$state.go('profile');
   	}
-
-  	$scope.logout = function() {
-  		Auth.logout();
-		var intervalId = mapService.getIntervalId(),
-			geoQuery = mapService.getGeoQuery(),
-			bumpQuery = mapService.getBumpQuery();
-
-		clearInterval(intervalId)
-  		geoQuery.cancel();
-  		bumpQuery.cancel();
-  		$state.go('login');
-  	}
-
 });
 
 google.maps.Marker.prototype.animatedMoveTo = function(newLocation) {
