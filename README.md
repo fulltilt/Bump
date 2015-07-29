@@ -1,5 +1,5 @@
 # Bump
-Social mobile app that uses geolocation to find and give other users 'props' within their vicinity.
+Social mobile app that uses geolocation to find and give other users 'props' within their vicinity. It was pitched as an Uber for high-fives.
 
 Idea originated from the 2014 SF Comedy Hackday.
 
